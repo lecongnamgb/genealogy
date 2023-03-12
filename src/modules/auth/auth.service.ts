@@ -47,10 +47,18 @@ export class AuthService {
         secret: process.env.REFRESH_TOKEN_SECRET,
         ignoreExpiration: false,
       });
+
       if (!isValidToken) {
         throw new BadRequestException('Invalid token');
       }
-      const accessToken = this.jwtService.sign(isValidToken);
+      console.log(process.env.ACCESS_TOKEN_SECRET);
+      const accessToken = this.jwtService.sign(
+        { username: isValidToken.username, userId: isValidToken.userId },
+        {
+          secret: process.env.ACCESS_TOKEN_SECRET,
+          expiresIn: process.env.ACCESS_TOKEN_LIFE,
+        },
+      );
 
       return { success: true, accessToken };
     } catch (err) {

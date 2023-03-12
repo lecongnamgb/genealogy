@@ -1,3 +1,4 @@
+import { AuthGuard } from '@nestjs/passport';
 import { ApiBody } from '@nestjs/swagger';
 import { UpdatePersonDTO } from './dto/update-person.dto';
 import { CreatePersonDTO } from './dto/create-person.dto';
