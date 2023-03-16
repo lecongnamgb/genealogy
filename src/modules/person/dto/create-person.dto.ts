@@ -25,17 +25,17 @@ export class CreatePersonDTO {
   deceasedDate: Date | null;
 
   @ApiProperty()
-  siblings: Array<string | Person>;
+  siblings: Array<string>;
 
   @ApiProperty()
-  children: Array<string | Person>;
+  children: Array<string>;
 
   @ApiProperty()
-  spouse: string | Person | null;
+  spouse: string;
 
   @ApiProperty()
-  father: string | Person | null;
+  father: string;
 
   @ApiProperty()
-  mother: string | Person | null;
+  mother: string;
 }

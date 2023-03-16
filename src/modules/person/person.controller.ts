@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('person')
+@Controller('people')
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
@@ -48,5 +48,15 @@ export class PersonController {
   @Delete(':id')
   async deletePersonById(@Param('id') id: string) {
     return await this.personService.deletePersonById(id);
+  }
+
+  @Get('/root/all')
+  async getAllRootPeople() {
+    return await this.personService.getAllRootPeople();
+  }
+
+  @Delete('delete/bulk')
+  async bulkDelete(@Body('name') name: string) {
+    return await this.personService.bulkDelete(name);
   }
 }

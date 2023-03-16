@@ -13,6 +13,7 @@ export class AuthController {
     return await this.authService.signUp(createUserDTO);
   }
 
+  @ApiBody({ type: CreateUserDTO })
   @Post('/log-in')
   async logIn(@Body() createUserDTO: CreateUserDTO) {
     return await this.authService.logIn(createUserDTO);

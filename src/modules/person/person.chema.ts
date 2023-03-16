@@ -34,10 +34,6 @@ export class Person {
 
   @ApiProperty()
   @Prop([{ required: false, type: SchemaTypes.ObjectId, ref: 'Person' }])
-  siblings: Array<Person>;
-
-  @ApiProperty()
-  @Prop([{ required: false, type: SchemaTypes.ObjectId, ref: 'Person' }])
   children: Array<Person>;
 
   @ApiProperty()
@@ -55,6 +51,6 @@ export class Person {
 
 export const PersonSchema = SchemaFactory.createForClass(Person);
 PersonSchema.pre(/^find/, function (next) {
-  this.populate(['siblings', 'children', 'spouse', 'father', 'mother']);
+  this.populate(['children']);
   next();
 });
