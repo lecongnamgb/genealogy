@@ -1,3 +1,4 @@
+import { PaginationDTO } from './dto/pagination-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody } from '@nestjs/swagger';
 import { UpdatePersonDTO } from './dto/update-person.dto';
@@ -12,6 +13,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -21,8 +23,11 @@ export class PersonController {
 
   //   @UseGuards(JwtAuthGuard)
   @Get()
-  async getAllPerson() {
-    return await this.personService.getAllPerson();
+  async getAllPerson(@Query() PaginationDTO: PaginationDTO) {
+    return await this.personService.getAllPerson(
+      PaginationDTO.pageNumber,
+      PaginationDTO.pageSize,
+    );
   }
 
   @ApiBody({ type: CreatePersonDTO })

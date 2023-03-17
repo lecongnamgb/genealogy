@@ -16,12 +16,15 @@ export class PersonService {
     @InjectModel(Person.name) private personModel: Model<PersonSchema>,
   ) {}
 
-  async getAllPerson(): Promise<any> {
+  async getAllPerson(pageNumber = 1, pageSize = 10): Promise<any> {
     try {
-      const people = await this.personModel.find();
+      const skip = (Number(pageNumber) - 1) * Number(pageSize);
+      const people = await this.personModel.find().skip(skip).limit(pageSize);
+      const count = await this.personModel.find().count();
       return {
         success: true,
         data: people,
+        total: count,
       };
     } catch (err) {
       throw new InternalServerErrorException(err.message);
@@ -156,7 +159,6 @@ export class PersonService {
           const children = oldFather.children.map((child) =>
             Object(child)._id?.toString(),
           );
-
           const index = children.indexOf(doesExist._id.toString());
 
           if (index > -1) {
@@ -219,6 +221,52 @@ export class PersonService {
         newSpouse.save();
       }
 
+      if (children && children.length > 0) {
+        children.map(async (child) => {
+          const childInstance = await this.personModel.findOne({ _id: child });
+
+          if (!childInstance) {
+            throw new BadRequestException('Invalid children info');
+          }
+          /*
+          Old mother/father removes children
+           */
+          if (doesExist.gender == GENDER.FEMALE) {
+            const oldMother = await this.personModel.findOne({
+              _id: Object(childInstance.mother)._id,
+            });
+            const children = oldMother.children.map((child) =>
+              Object(child)._id?.toString(),
+            );
+
+            const index = children.indexOf(child);
+
+            if (index > -1) {
+              children.splice(index, 1);
+            }
+            oldMother.children = children;
+            oldMother.save();
+            childInstance.mother = doesExist;
+            childInstance.save();
+          } else {
+            const oldFather = await this.personModel.findOne({
+              _id: Object(childInstance.father)._id,
+            });
+            const children = oldFather.children.map((child) =>
+              Object(child)._id?.toString(),
+            );
+            const index = children.indexOf(child);
+            if (index > -1) {
+              children.splice(index, 1);
+            }
+            oldFather.children = children;
+            oldFather.save();
+            childInstance.father = doesExist;
+            childInstance.save();
+          }
+        });
+      }
+
       const person = await this.personModel
         .updateOne({ _id: id }, updatePersonDTO)
         .exec();
@@ -264,9 +312,9 @@ export class PersonService {
 
   async getAllRootPeople() {
     try {
-      const allPeople = await this.getAllPerson();
+      const allPeople = await this.personModel.find();
       const rootPeopleFlag = {};
-      allPeople.data.map((person) => {
+      allPeople.map((person) => {
         if (!(person?.mother || person?.father)) {
           const id = person._id.toString();
           rootPeopleFlag[id] = true;
