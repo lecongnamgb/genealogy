@@ -1,6 +1,6 @@
 import { PaginationDTO } from './dto/pagination-dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { UpdatePersonDTO } from './dto/update-person.dto';
 import { CreatePersonDTO } from './dto/create-person.dto';
 import { PersonService } from './person.service';
@@ -22,6 +22,7 @@ export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
   //   @UseGuards(JwtAuthGuard)
+  @ApiQuery({ type: PaginationDTO })
   @Get()
   async getAllPerson(@Query() PaginationDTO: PaginationDTO) {
     return await this.personService.getAllPerson(
@@ -60,8 +61,9 @@ export class PersonController {
     return await this.personService.getAllRootPeople();
   }
 
-  @Delete('delete/bulk')
-  async bulkDelete(@Body('name') name: string) {
-    return await this.personService.bulkDelete(name);
-  }
+  // dev-only
+  // @Delete('delete/bulk')
+  // async bulkDelete(@Body('name') name: string) {
+  //   return await this.personService.bulkDelete(name);
+  // }
 }
