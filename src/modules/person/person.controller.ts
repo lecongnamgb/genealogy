@@ -22,8 +22,9 @@ export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
   //   @UseGuards(JwtAuthGuard)
-  @ApiQuery({ type: PaginationDTO })
   @Get()
+  @ApiQuery({ name: 'pageNumber', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
   async getAllPerson(@Query() PaginationDTO: PaginationDTO) {
     return await this.personService.getAllPerson(
       PaginationDTO.pageNumber,

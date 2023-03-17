@@ -1,4 +1,4 @@
 export class PaginationDTO {
-  pageSize;
-  pageNumber;
+  pageSize: any;
+  pageNumber: any;
 }
