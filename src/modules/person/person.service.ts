@@ -49,6 +49,29 @@ export class PersonService {
     }
   }
 
+  async getAncestory(id: string): Promise<String[]> {
+    try {
+      const person = await this.personModel.findOne({ _id: id });
+      const ancestory = [];
+      ancestory.push(id);
+      if (person.mother) {
+        const motherId = Object(person.mother)._id.toString();
+        ancestory.push(motherId);
+        const motherAncestory = await this.getAncestory(motherId);
+        ancestory.push(...motherAncestory);
+      }
+      if (person.father) {
+        const fatherId = Object(person.father)._id.toString();
+        ancestory.push(fatherId);
+        const fatherAncestory = await this.getAncestory(fatherId);
+        ancestory.push(...fatherAncestory);
+      }
+      return ancestory;
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  }
+
   async createPerson(createPersonDTO: CreatePersonDTO) {
     try {
       const { spouse, father, mother, children } = createPersonDTO;
@@ -56,12 +79,16 @@ export class PersonService {
       let spouseInfo;
       let motherInfo;
       let childrenInfo = false;
+      let ancestorArr = [];
+      let validParent = true;
 
       if (Boolean(father)) {
         fatherInfo = await this.personModel.findOne({ _id: father });
         if (!Boolean(fatherInfo) || fatherInfo.gender != GENDER.MALE) {
           throw new BadRequestException('Invalid father info');
         }
+        const fatherAncestory = await this.getAncestory(father);
+        ancestorArr.push(...fatherAncestory);
       }
       if (Boolean(spouse)) {
         spouseInfo = await this.personModel.findOne({ _id: spouse });
@@ -74,18 +101,28 @@ export class PersonService {
         if (!motherInfo || motherInfo.gender != GENDER.FEMALE) {
           throw new BadRequestException('Invalid mother info');
         }
+        const motherAncestory = await this.getAncestory(mother);
+        ancestorArr.push(...motherAncestory);
       }
+
       if (children && children.length > 0) {
+        for (const child of children) {
+          if (ancestorArr.indexOf(child) !== -1) {
+            throw new BadRequestException('Child is one of their ancestor');
+          }
+        }
         childrenInfo = true;
         children.map(async (child) => {
           if (Boolean(child)) {
             const childInfo = await this.personModel.findOne({ _id: child });
-            if (!childInfo || childInfo.gender != GENDER.FEMALE) {
+            if (!childInfo) {
+              // If the child doesn't exist and the ancestory id arr  includes child Id
               throw new BadRequestException('Invalid child info');
             }
           }
         });
       }
+
       if (Boolean(mother)) {
         motherInfo = await this.personModel.findOne({ _id: mother });
         if (!motherInfo || motherInfo.gender != GENDER.FEMALE) {
@@ -147,11 +184,14 @@ export class PersonService {
         throw new BadRequestException('Invalid id');
       }
       const { children, father, mother, spouse } = updatePersonDTO;
+      const ancestoryArr = [];
       if (father) {
         const newFather = await this.personModel.findOne({ _id: father });
         if (!newFather) {
           throw new BadRequestException('Invalid father info');
         }
+        const newFatherAncestory = await this.getAncestory(father);
+        ancestoryArr.push(...newFatherAncestory);
         const oldFather = await this.personModel.findOne({
           _id: Object(doesExist.father)._id,
         });
@@ -176,6 +216,8 @@ export class PersonService {
         if (!newMother) {
           throw new BadRequestException('Invalid mother info');
         }
+        const newMotherAncestory = await this.getAncestory(mother);
+        ancestoryArr.push(...newMotherAncestory);
         const oldMother = await this.personModel.findOne({
           _id: Object(doesExist.mother)._id,
         });
@@ -225,7 +267,7 @@ export class PersonService {
         children.map(async (child) => {
           const childInstance = await this.personModel.findOne({ _id: child });
 
-          if (!childInstance) {
+          if (!childInstance || ancestoryArr.indexOf(child) !== -1) {
             throw new BadRequestException('Invalid children info');
           }
           /*
